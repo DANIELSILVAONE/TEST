@@ -1,0 +1,73 @@
+import React, { useState } from 'react';
+import { Clock } from 'lucide-react';
+
+const App = () => {
+  const [fechaHora, setFechaHora] = useState(new Date());
+  const [codigoBarra, setCodigoBarra] = useState('');
+  const [fechaHoraEscan, setFechaHoraEscan] = useState('');
+  const [diferencia, setDiferencia] = useState('');
+
+  const generarCodigoBarra = () => {
+    const fechaHoraActual = new Date();
+    setFechaHora(fechaHoraActual);
+    const textoBarra = `${fechaHoraActual.toLocaleDateString()} ${fechaHoraActual.toLocaleTimeString()}`;
+    setCodigoBarra(textoBarra);
+  };
+
+  const imprimirCodigoBarra = () => {
+    const ventana = window.open('');
+    ventana.document.write(`<img src="https://barcode.tec-it.com/barcode.ashx?data=https://example.com/ticket/${encodeURIComponent(codigoBarra)}&code=Code128&dpi=96&dataseparator=">`);
+  };
+
+  const escanearCodigoBarra = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'camera';
+    input.onchange = (e) => {
+      const archivo = e.target.files[0];
+      const lector = new FileReader();
+      lector.onload = () => {
+        const textoBarra = lector.result;
+        const fechaHoraEscan = new Date();
+        setFechaHoraEscan(fechaHoraEscan);
+        const fechaHoraBarra = new Date(codigoBarra.split(' ')[0]);
+        const diferencia = Math.abs(fechaHoraEscan.getTime() - fechaHoraBarra.getTime());
+        const minutosDiferencia = Math.floor(diferencia / 60000);
+        setDiferencia(minutosDiferencia);
+        const ventana = window.open(`https://example.com/ticket/${encodeURIComponent(codigoBarra)}`);
+        ventana.document.write(`Fecha y hora de generación del ticket: ${codigoBarra}<br>Fecha y hora de escaneo: ${fechaHoraEscan.toLocaleString()}<br>Diferencia: ${minutosDiferencia} minutos`);
+      };
+      lector.readAsText(archivo);
+    };
+    input.click();
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center h-screen">
+      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={generarCodigoBarra}>
+        Nuevo ticket
+      </button>
+      {codigoBarra && (
+        <div className="mt-4">
+          <img src={`https://barcode.tec-it.com/barcode.ashx?data=https://example.com/ticket/${encodeURIComponent(codigoBarra)}&code=Code128&dpi=96&dataseparator=`} />
+          <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4" onClick={imprimirCodigoBarra}>
+            Imprimir
+          </button>
+        </div>
+      )}
+      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4" onClick={escanearCodigoBarra}>
+        Escanear
+      </button>
+      {fechaHoraEscan && (
+        <div className="mt-4">
+          <p>Fecha y hora de generación del ticket: {codigoBarra}</p>
+          <p>Fecha y hora de escaneo: {fechaHoraEscan.toLocaleString()}</p>
+          <p>Diferencia: {diferencia} minutos</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default App;
